@@ -4,6 +4,9 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 from datetime import datetime, timedelta
+from config import config
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_wtf.csrf import CSRFProtect
 
 
 class Base(DeclarativeBase):
@@ -12,22 +15,35 @@ class Base(DeclarativeBase):
 
 db = SQLAlchemy(model_class=Base)
 
-# create the app
-app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET")
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
+def create_app(config_name='default'):
+    """Application factory function."""
+    app = Flask(__name__)
+    
+    # Load configuration
+    config_name = config_name or os.environ.get('FLASK_ENV', 'default')
+    config_class = config[config_name]
+    
+    if config_name == 'production':
+        # Instantiate production config to enforce environment variables
+        app.config.from_object(config_class())
+    else:
+        # Use class for development
+        app.config.from_object(config_class)
+    
+    # Setup ProxyFix for HTTPS handling (needed for PythonAnywhere)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+    
+    # Initialize CSRF protection
+    csrf = CSRFProtect(app)
+    
+    # Initialize the database with the app
+    db.init_app(app)
+    
+    return app
 
-# configure the database
-app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///blog.db'
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=24)
-
-# Admin credentials
-app.config["ADMIN_USERNAME"] = 'admin'
-app.config["ADMIN_PASSWORD"] = 'admin123'
-
-# initialize the app with the extension
-db.init_app(app)
+# Create the app instance
+# In production, this will use environment variable FLASK_ENV
+app = create_app(os.environ.get('FLASK_ENV', 'development'))
 
 # Database models
 class Post(db.Model):
@@ -127,7 +143,18 @@ def admin_login():
         username = request.form['username']
         password = request.form['password']
         
-        if username == app.config['ADMIN_USERNAME'] and password == app.config['ADMIN_PASSWORD']:
+        # Get stored admin credentials
+        admin_username = app.config['ADMIN_USERNAME']
+        admin_password_hash = app.config.get('ADMIN_PASSWORD_HASH')
+        
+        # If no hash is stored, check against plain password (development only)
+        if admin_password_hash:
+            password_valid = check_password_hash(admin_password_hash, password)
+        else:
+            # Fallback to plain password for development
+            password_valid = password == app.config['ADMIN_PASSWORD']
+        
+        if username == admin_username and password_valid:
             session['logged_in'] = True
             session.permanent = True
             flash('Logged in successfully!', 'success')

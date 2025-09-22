@@ -14,6 +14,7 @@
             <div class="card-body">
                 <h5 class="card-title mb-4">Site Configuration</h5>
                 <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
                         <label for="blog_title" class="form-label">Blog Title</label>
                         <input type="text" class="form-control" id="blog_title" name="blog_title" value="{{ settings.blog_title }}" required>
