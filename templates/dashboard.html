@@ -11,6 +11,27 @@
     </div>
 </div>
 
+<div class="row mb-4 animate__animated animate__fadeIn">
+    <div class="col-md-12">
+        <div class="card blog-card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-download me-2"></i>Tutorial Data Management
+                </h5>
+                <p class="text-muted mb-3">Export or import tutorial content for backup and migration purposes.</p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{{ url_for('export_tutorials') }}" class="btn btn-outline-primary btn-gradient">
+                        <i class="fas fa-download me-2"></i>Export All Tutorials
+                    </a>
+                    <a href="{{ url_for('import_tutorials') }}" class="btn btn-outline-success btn-gradient">
+                        <i class="fas fa-upload me-2"></i>Import Tutorials
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card blog-card animate__animated animate__fadeIn">
     <div class="card-body">
         <h5 class="card-title">Manage Posts</h5>

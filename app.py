@@ -219,6 +219,122 @@ def admin_settings():
     
     return render_template('admin_settings.html', settings=settings)
 
+@app.route('/admin/export')
+@login_required
+def export_tutorials():
+    """Export all tutorials as JSON"""
+    import json
+    from flask import Response
+    from datetime import datetime
+    
+    posts = Post.query.all()
+    tutorials_data = {
+        'export_date': datetime.now().isoformat(),
+        'total_posts': len(posts),
+        'posts': []
+    }
+    
+    for post in posts:
+        post_data = {
+            'title': post.title,
+            'content': post.content,
+            'featured_image': post.featured_image,
+            'created_at': post.created_at.isoformat() if post.created_at else None
+        }
+        tutorials_data['posts'].append(post_data)
+    
+    json_data = json.dumps(tutorials_data, indent=2, ensure_ascii=False)
+    
+    response = Response(
+        json_data,
+        mimetype='application/json',
+        headers={'Content-Disposition': f'attachment; filename=tutorials_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'}
+    )
+    
+    flash(f'Successfully exported {len(posts)} tutorials!', 'success')
+    return response
+
+@app.route('/admin/import', methods=['GET', 'POST'])
+@login_required
+def import_tutorials():
+    """Import tutorials from JSON file"""
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file selected!', 'error')
+            return redirect(request.url)
+        
+        file = request.files['file']
+        if file.filename == '':
+            flash('No file selected!', 'error')
+            return redirect(request.url)
+        
+        if not file.filename or not file.filename.lower().endswith('.json'):
+            flash('Please upload a JSON file!', 'error')
+            return redirect(request.url)
+        
+        import json
+        from datetime import datetime
+        
+        try:
+            # Read and parse JSON file
+            file_content = file.read().decode('utf-8')
+            data = json.loads(file_content)
+            
+            if 'posts' not in data:
+                flash('Invalid file format! Missing posts data.', 'error')
+                return redirect(request.url)
+            
+            imported_count = 0
+            skipped_count = 0
+            
+            for post_data in data['posts']:
+                # Check if required fields exist
+                if not post_data.get('title') or not post_data.get('content'):
+                    skipped_count += 1
+                    continue
+                
+                # Check if post with same title already exists
+                existing_post = Post.query.filter_by(title=post_data['title']).first()
+                if existing_post:
+                    skipped_count += 1
+                    continue
+                
+                # Create new post
+                new_post = Post()
+                new_post.title = post_data['title']
+                new_post.content = post_data['content']
+                new_post.featured_image = post_data.get('featured_image')
+                
+                # Parse created_at if provided, otherwise use current time
+                if post_data.get('created_at'):
+                    try:
+                        new_post.created_at = datetime.fromisoformat(post_data['created_at'].replace('Z', '+00:00'))
+                    except:
+                        new_post.created_at = datetime.utcnow()
+                else:
+                    new_post.created_at = datetime.utcnow()
+                
+                db.session.add(new_post)
+                imported_count += 1
+            
+            db.session.commit()
+            
+            if imported_count > 0:
+                flash(f'Successfully imported {imported_count} tutorials! Skipped {skipped_count} duplicates or invalid entries.', 'success')
+            else:
+                flash(f'No new tutorials imported. Skipped {skipped_count} duplicates or invalid entries.', 'warning')
+            
+            return redirect(url_for('admin_dashboard'))
+            
+        except json.JSONDecodeError:
+            flash('Invalid JSON file format!', 'error')
+            return redirect(request.url)
+        except Exception as e:
+            flash(f'Error importing tutorials: {str(e)}', 'error')
+            return redirect(request.url)
+    
+    return render_template('import_tutorials.html')
+
 @app.route('/certificate')
 def certificate_form():
     """Display certificate generation form"""
