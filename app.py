@@ -15,7 +15,16 @@ with app.app_context():
     db.create_all()
     # Create default site settings if none exist
     if not SiteSettings.query.first():
-        default_settings = SiteSettings(blog_title='Blog CMS', blog_description='Welcome to Our Blog')
+        default_settings = SiteSettings(
+            blog_title='Blog CMS', 
+            blog_description='Welcome to Our Blog',
+            primary_color='#667eea',
+            secondary_color='#764ba2',
+            background_color='#667eea',
+            card_background='#ffffff',
+            text_color='#333333',
+            navbar_color='#000000'
+        )
         db.session.add(default_settings)
         db.session.commit()
 
@@ -32,7 +41,16 @@ def login_required(f):
 def get_site_settings():
     settings = SiteSettings.query.first()
     if not settings:
-        settings = SiteSettings(blog_title='Blog CMS', blog_description='Welcome to Our Blog')
+        settings = SiteSettings(
+            blog_title='Blog CMS', 
+            blog_description='Welcome to Our Blog',
+            primary_color='#667eea',
+            secondary_color='#764ba2',
+            background_color='#667eea',
+            card_background='#ffffff',
+            text_color='#333333',
+            navbar_color='#000000'
+        )
         db.session.add(settings)
         db.session.commit()
     return settings
@@ -135,12 +153,103 @@ def admin_settings():
     if request.method == 'POST':
         settings.blog_title = request.form['blog_title']
         settings.blog_description = request.form['blog_description']
+        settings.primary_color = request.form['primary_color']
+        settings.secondary_color = request.form['secondary_color']
+        settings.background_color = request.form['background_color']
+        settings.card_background = request.form['card_background']
+        settings.text_color = request.form['text_color']
+        settings.navbar_color = request.form['navbar_color']
         db.session.commit()
         
         flash('Settings updated successfully!', 'success')
         return redirect(url_for('admin_settings'))
     
     return render_template('admin_settings.html', settings=settings)
+
+@app.route('/dynamic-styles.css')
+def dynamic_styles():
+    settings = get_site_settings()
+    
+    css_content = f"""
+/* Dynamic styles based on admin settings */
+.gradient-bg {{
+    background: linear-gradient(135deg, {settings.background_color} 0%, {settings.secondary_color} 100%);
+}}
+
+.btn-gradient {{
+    background: linear-gradient(45deg, {settings.primary_color}, {settings.secondary_color});
+}}
+
+.btn-gradient:hover {{
+    background: linear-gradient(45deg, {settings.secondary_color}, {settings.primary_color});
+}}
+
+.blog-card {{
+    background: rgba({hex_to_rgb(settings.card_background)}, 0.95);
+}}
+
+.navbar-dark {{
+    background: rgba({hex_to_rgb(settings.navbar_color)}, 0.8) !important;
+}}
+
+.certificate {{
+    border: 3px solid {settings.primary_color};
+}}
+
+.certificate::before {{
+    border: 2px solid {settings.secondary_color};
+}}
+
+.certificate-header h2 {{
+    color: {settings.primary_color};
+}}
+
+.student-name {{
+    color: {settings.secondary_color} !important;
+    text-decoration-color: {settings.primary_color};
+}}
+
+.tutorial-title {{
+    color: {settings.primary_color} !important;
+}}
+
+.signature-line hr {{
+    border: 1px solid {settings.primary_color};
+}}
+
+.signature-line small {{
+    color: {settings.secondary_color};
+}}
+
+.form-control {{
+    border: 2px solid rgba({hex_to_rgb(settings.primary_color)}, 0.3);
+}}
+
+.form-control:focus {{
+    border-color: {settings.primary_color};
+    box-shadow: 0 0 0 0.2rem rgba({hex_to_rgb(settings.primary_color)}, 0.25);
+}}
+
+.text-primary {{
+    color: {settings.text_color} !important;
+}}
+
+.card-title {{
+    color: {settings.text_color};
+}}
+
+.post-content {{
+    color: {settings.text_color};
+}}
+"""
+    
+    from flask import Response
+    return Response(css_content, mimetype='text/css')
+
+def hex_to_rgb(hex_color):
+    """Convert hex color to RGB values for rgba usage"""
+    hex_color = hex_color.lstrip('#')
+    return ', '.join(str(int(hex_color[i:i+2], 16)) for i in (0, 2, 4))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
