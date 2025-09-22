@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - Blog{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card blog-card animate__animated animate__fadeIn">
+            <div class="card-body">
+                <h1 class="card-title mb-3">{{ post.title }}</h1>
+                <p class="text-muted mb-4">{{ post.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                <div class="card-text post-content">
+                    {{ post.content | safe }}
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary btn-gradient animate__animated animate__fadeInUp">
+                ← Back to Blog
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
