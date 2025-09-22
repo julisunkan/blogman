@@ -6,7 +6,7 @@ expertMode = true
 channel = "stable-25_05"
 
 [workflows]
-runButton = "Flask Server"
+runButton = "PWA Blog Server"
 
 [[workflows.workflow]]
 name = "Project"
@@ -31,6 +31,15 @@ outputType = "webview"
 
 [[workflows.workflow]]
 name = "Flask Server"
+author = 47704679
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python app.py"
+
+[[workflows.workflow]]
+name = "PWA Blog Server"
 author = 47704679
 mode = "sequential"
 

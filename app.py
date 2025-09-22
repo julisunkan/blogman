@@ -166,6 +166,12 @@ def admin_settings():
     
     return render_template('admin_settings.html', settings=settings)
 
+@app.route('/manifest.json')
+def serve_manifest():
+    """Serve PWA manifest with proper MIME type"""
+    from flask import send_from_directory
+    return send_from_directory('static', 'manifest.json', mimetype='application/manifest+json')
+
 @app.route('/dynamic-styles.css')
 def dynamic_styles():
     settings = get_site_settings()
