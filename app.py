@@ -49,6 +49,7 @@ class SiteSettings(db.Model):
     primary_color = db.Column(db.String(7), nullable=False, default='#667eea')
     secondary_color = db.Column(db.String(7), nullable=False, default='#764ba2')
     background_color = db.Column(db.String(7), nullable=False, default='#667eea')
+    overall_background = db.Column(db.String(7), nullable=False, default='#1a1a2e')
     card_background = db.Column(db.String(7), nullable=False, default='#ffffff')
     text_color = db.Column(db.String(7), nullable=False, default='#333333')
     navbar_color = db.Column(db.String(7), nullable=False, default='#000000')
@@ -69,6 +70,7 @@ with app.app_context():
         default_settings.primary_color = '#667eea'
         default_settings.secondary_color = '#764ba2'
         default_settings.background_color = '#667eea'
+        default_settings.overall_background = '#1a1a2e'
         default_settings.card_background = '#ffffff'
         default_settings.text_color = '#333333'
         default_settings.navbar_color = '#000000'
@@ -94,6 +96,7 @@ def get_site_settings():
         settings.primary_color = '#667eea'
         settings.secondary_color = '#764ba2'
         settings.background_color = '#667eea'
+        settings.overall_background = '#1a1a2e'
         settings.card_background = '#ffffff'
         settings.text_color = '#333333'
         settings.navbar_color = '#000000'
@@ -205,6 +208,7 @@ def admin_settings():
         settings.primary_color = request.form['primary_color']
         settings.secondary_color = request.form['secondary_color']
         settings.background_color = request.form['background_color']
+        settings.overall_background = request.form['overall_background']
         settings.card_background = request.form['card_background']
         settings.text_color = request.form['text_color']
         settings.navbar_color = request.form['navbar_color']
@@ -417,28 +421,102 @@ def dynamic_styles():
     
     css_content = f"""
 /* Dynamic styles based on admin settings */
+body.mobile-app-body {{
+    background: {settings.overall_background} !important;
+    background-attachment: fixed;
+    transition: background-color 0.8s ease-in-out;
+}}
+
 .gradient-bg {{
     background: linear-gradient(135deg, {settings.background_color} 0%, {settings.secondary_color} 100%);
+    animation: gradientShift 8s ease-in-out infinite;
+}}
+
+@keyframes gradientShift {{
+    0%, 100% {{ background: linear-gradient(135deg, {settings.background_color} 0%, {settings.secondary_color} 100%); }}
+    50% {{ background: linear-gradient(135deg, {settings.secondary_color} 0%, {settings.primary_color} 100%); }}
 }}
 
 .btn-gradient {{
     background: linear-gradient(45deg, {settings.primary_color}, {settings.secondary_color});
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}}
+
+.btn-gradient::before {{
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.6s ease;
+}}
+
+.btn-gradient:hover::before {{
+    left: 100%;
 }}
 
 .btn-gradient:hover {{
     background: linear-gradient(45deg, {settings.secondary_color}, {settings.primary_color});
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 10px 25px rgba({hex_to_rgb(settings.primary_color)}, 0.3);
 }}
 
 .blog-card {{
     background: rgba({hex_to_rgb(settings.card_background)}, 0.95);
+    backdrop-filter: blur(10px);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}}
+
+.blog-card:hover {{
+    transform: translateY(-8px) rotateX(2deg);
+    box-shadow: 0 20px 40px rgba({hex_to_rgb(settings.primary_color)}, 0.2);
 }}
 
 .navbar-dark {{
-    background: rgba({hex_to_rgb(settings.navbar_color)}, 0.8) !important;
+    background: rgba({hex_to_rgb(settings.navbar_color)}, 0.9) !important;
+    backdrop-filter: blur(20px);
+    transition: all 0.3s ease;
+}}
+
+.mobile-header {{
+    background: rgba({hex_to_rgb(settings.card_background)}, 0.95) !important;
+    backdrop-filter: blur(20px);
+    transition: all 0.3s ease;
+}}
+
+.bottom-nav {{
+    background: rgba({hex_to_rgb(settings.card_background)}, 0.95) !important;
+    backdrop-filter: blur(20px);
+    transition: all 0.3s ease;
+}}
+
+.nav-item {{
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}}
+
+.nav-item:hover {{
+    transform: translateY(-3px) scale(1.05);
+}}
+
+.nav-item.active {{
+    background: linear-gradient(45deg, {settings.primary_color}, {settings.secondary_color});
+    color: white !important;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba({hex_to_rgb(settings.primary_color)}, 0.3);
 }}
 
 .certificate {{
     border: 3px solid {settings.primary_color};
+    transition: all 0.3s ease;
+}}
+
+.certificate:hover {{
+    transform: scale(1.02);
+    box-shadow: 0 15px 35px rgba({hex_to_rgb(settings.primary_color)}, 0.2);
 }}
 
 .certificate::before {{
@@ -447,11 +525,23 @@ def dynamic_styles():
 
 .certificate-header h2 {{
     color: {settings.primary_color};
+    animation: glow 2s ease-in-out infinite alternate;
+}}
+
+@keyframes glow {{
+    from {{ text-shadow: 0 0 5px rgba({hex_to_rgb(settings.primary_color)}, 0.5); }}
+    to {{ text-shadow: 0 0 20px rgba({hex_to_rgb(settings.primary_color)}, 0.8); }}
 }}
 
 .student-name {{
     color: {settings.secondary_color} !important;
     text-decoration-color: {settings.primary_color};
+    animation: pulse 2s ease-in-out infinite;
+}}
+
+@keyframes pulse {{
+    0%, 100% {{ transform: scale(1); }}
+    50% {{ transform: scale(1.02); }}
 }}
 
 .tutorial-title {{
@@ -468,11 +558,13 @@ def dynamic_styles():
 
 .form-control {{
     border: 2px solid rgba({hex_to_rgb(settings.primary_color)}, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }}
 
 .form-control:focus {{
     border-color: {settings.primary_color};
     box-shadow: 0 0 0 0.2rem rgba({hex_to_rgb(settings.primary_color)}, 0.25);
+    transform: scale(1.02);
 }}
 
 .text-primary {{
@@ -481,10 +573,78 @@ def dynamic_styles():
 
 .card-title {{
     color: {settings.text_color};
+    transition: color 0.3s ease;
 }}
 
 .post-content {{
     color: {settings.text_color};
+    line-height: 1.8;
+    transition: all 0.3s ease;
+}}
+
+.mobile-alert {{
+    animation: slideInDown 0.5s ease-out;
+}}
+
+@keyframes slideInDown {{
+    from {{
+        transform: translateY(-100%);
+        opacity: 0;
+    }}
+    to {{
+        transform: translateY(0);
+        opacity: 1;
+    }}
+}}
+
+.featured-image {{
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}}
+
+.featured-image:hover {{
+    transform: scale(1.05);
+}}
+
+/* Floating animation for icons */
+.nav-item i {{
+    animation: float 3s ease-in-out infinite;
+}}
+
+@keyframes float {{
+    0%, 100% {{ transform: translateY(0px); }}
+    50% {{ transform: translateY(-5px); }}
+}}
+
+/* Ripple effect for buttons */
+.btn-gradient {{
+    position: relative;
+    overflow: hidden;
+}}
+
+.btn-gradient:active::after {{
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    animation: ripple 0.6s ease-out;
+}}
+
+@keyframes ripple {{
+    to {{
+        width: 300px;
+        height: 300px;
+        opacity: 0;
+    }}
+}}
+
+/* Smooth transitions for all interactive elements */
+* {{
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
 }}
 """
     
