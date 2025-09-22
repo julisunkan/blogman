@@ -215,6 +215,40 @@ def admin_settings():
     
     return render_template('admin_settings.html', settings=settings)
 
+@app.route('/certificate')
+def certificate_form():
+    """Display certificate generation form"""
+    posts = Post.query.order_by(Post.created_at.desc()).all()
+    return render_template('certificate_form.html', posts=posts)
+
+@app.route('/generate_certificate', methods=['POST'])
+def generate_certificate():
+    """Process certificate form and redirect to certificate download"""
+    student_name = request.form['student_name'].strip()
+    post_id = request.form['post_id']
+    
+    if not student_name:
+        flash('Please enter your full name.', 'error')
+        return redirect(url_for('certificate_form'))
+    
+    if not post_id:
+        flash('Please select a tutorial.', 'error')
+        return redirect(url_for('certificate_form'))
+    
+    # Validate that post_id is valid and post exists
+    try:
+        post_id = int(post_id)
+        post = Post.query.get(post_id)
+        if not post:
+            flash('Selected tutorial not found.', 'error')
+            return redirect(url_for('certificate_form'))
+    except ValueError:
+        flash('Invalid tutorial selection.', 'error')
+        return redirect(url_for('certificate_form'))
+    
+    # Redirect to the existing certificate download route (Flask handles URL encoding)
+    return redirect(url_for('download_certificate', post_id=post_id, student_name=student_name))
+
 @app.route('/manifest.json')
 def serve_manifest():
     """Serve PWA manifest with proper MIME type"""
@@ -231,8 +265,8 @@ def download_certificate(post_id, student_name):
     post = Post.query.get_or_404(post_id)
     settings = get_site_settings()
     
-    # Decode the student name from URL
-    student_name = urllib.parse.unquote(student_name)
+    # Flask automatically decodes the URL path parameter
+    # student_name is already decoded by Flask
     completion_date = datetime.now().strftime('%B %d, %Y')
     
     certificate_html = f"""
