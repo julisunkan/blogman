@@ -52,10 +52,6 @@ args = "python app.py"
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 34577
-externalPort = 3000
-
 [deployment]
 deploymentTarget = "autoscale"
 run = ["gunicorn", "--bind", "0.0.0.0:5000", "--reuse-port", "main:app"]
