@@ -16,7 +16,9 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ post.title }}</h5>
                         <p class="card-text">{{ (post.content[:150] + '...' if post.content|length > 150 else post.content) | safe }}</p>
-                        <a href="{{ url_for('post_detail', id=post.id) }}" class="btn btn-primary btn-gradient">Read More</a>
+                        <div class="text-center">
+                            <a href="{{ url_for('post_detail', id=post.id) }}" class="btn btn-primary btn-gradient">Explore Tutorial</a>
+                        </div>
                     </div>
                 </div>
             {% endfor %}
