@@ -27,7 +27,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    max-width: 400px;
+    max-width: 100%;
     margin: 0 auto;
 }
 
@@ -57,7 +57,7 @@
 .mobile-content {
     flex: 1;
     padding: 80px 20px 100px;
-    max-width: 400px;
+    max-width: 100%;
     margin: 0 auto;
     width: 100%;
     box-sizing: border-box;
@@ -112,7 +112,7 @@
     display: flex;
     justify-content: space-around;
     align-items: center;
-    max-width: 400px;
+    max-width: 100%;
     margin: 0 auto;
     padding: 0 20px;
 }
@@ -149,12 +149,93 @@
     transform: translateY(-2px);
 }
 
+/* Desktop Navigation */
+.navbar-dark .nav-link {
+    color: rgba(255, 255, 255, 0.8) !important;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin: 0 5px;
+    padding: 8px 16px !important;
+}
+
+.navbar-dark .nav-link:hover,
+.navbar-dark .nav-link.active {
+    color: white !important;
+    background: rgba(102, 126, 234, 0.2);
+    transform: translateY(-1px);
+}
+
 /* Responsive adjustments for larger screens */
-@media (min-width: 401px) {
-    .mobile-header,
-    .mobile-content,
-    .nav-container {
-        max-width: 400px;
+@media (min-width: 768px) {
+    .mobile-content {
+        padding: 100px 32px 40px;
+    }
+    
+    /* Desktop - no bottom nav padding needed */
+    body:not(.d-md-none) .mobile-content {
+        padding-bottom: 40px;
+    }
+    
+    .blog-card .featured-image {
+        height: 300px;
+    }
+    
+    .blog-card .card-title {
+        font-size: clamp(1.1rem, 2vw, 1.5rem);
+    }
+    
+    .blog-card .card-text {
+        font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+    }
+    
+    /* Desktop buttons can be side by side */
+    .btn-gradient {
+        width: auto;
+        margin-right: 10px;
+        display: inline-block;
+    }
+}
+
+@media (min-width: 992px) {
+    .mobile-content {
+        padding: 120px 40px 60px;
+    }
+    
+    .blog-card .featured-image {
+        height: 360px;
+    }
+    
+    .post-content {
+        font-size: clamp(1.1rem, 1vw + 0.5rem, 1.25rem);
+    }
+    
+    /* Larger cards for desktop */
+    .blog-card {
+        margin-bottom: 30px;
+    }
+    
+    .blog-card .card-body {
+        padding: 30px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .mobile-content {
+        padding: 140px 60px 80px;
+    }
+    
+    /* Extra large screens */
+    .container {
+        max-width: 1140px;
+    }
+    
+    .blog-card .card-title {
+        font-size: 1.75rem;
+    }
+    
+    .blog-card .card-text {
+        font-size: 1.125rem;
+        line-height: 1.6;
     }
 }
 
@@ -240,9 +321,12 @@
     transform: translateY(-1px);
 }
 
-.d-flex.gap-2 {
-    flex-direction: column;
-    gap: 0 !important;
+/* Mobile-only column layout for buttons */
+@media (max-width: 575.98px) {
+    .d-flex.gap-2 {
+        flex-direction: column;
+        gap: 0 !important;
+    }
 }
 
 /* Post content styling */
