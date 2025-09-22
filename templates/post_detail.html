@@ -56,7 +56,6 @@
                     </div>
                     <div class="text-center mt-3">
                         <button id="downloadBtn" class="btn btn-primary btn-gradient">Download Certificate</button>
-                        <button id="printBtn" class="btn btn-outline-primary">Print Certificate</button>
                     </div>
                 </div>
             </div>
@@ -92,11 +91,6 @@ document.getElementById('certificateForm').addEventListener('submit', function(e
     document.getElementById('certificatePreview').scrollIntoView({ 
         behavior: 'smooth' 
     });
-});
-
-// Print functionality
-document.getElementById('printBtn').addEventListener('click', function() {
-    window.print();
 });
 
 // Download functionality (simplified - saves as HTML)
