@@ -5,7 +5,7 @@
 {% block content %}
 <div class="row">
     <div class="col-lg-8 mx-auto">
-        <h1 class="text-center mb-5 text-white animate__animated animate__fadeInDown">Welcome to Our Blog</h1>
+        <h1 class="text-center mb-5 text-white animate__animated animate__fadeInDown">{{ site_settings.blog_description }}</h1>
         
         {% if posts %}
             {% for post in posts %}

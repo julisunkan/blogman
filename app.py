@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-from models import db, Post
+from models import db, Post, SiteSettings
 from config import Config
 import os
 
@@ -13,6 +13,11 @@ db.init_app(app)
 os.makedirs('instance', exist_ok=True)
 with app.app_context():
     db.create_all()
+    # Create default site settings if none exist
+    if not SiteSettings.query.first():
+        default_settings = SiteSettings(blog_title='Blog CMS', blog_description='Welcome to Our Blog')
+        db.session.add(default_settings)
+        db.session.commit()
 
 # Authentication decorator
 def login_required(f):
@@ -22,6 +27,20 @@ def login_required(f):
         return f(*args, **kwargs)
     decorated_function.__name__ = f.__name__
     return decorated_function
+
+# Helper function to get site settings
+def get_site_settings():
+    settings = SiteSettings.query.first()
+    if not settings:
+        settings = SiteSettings(blog_title='Blog CMS', blog_description='Welcome to Our Blog')
+        db.session.add(settings)
+        db.session.commit()
+    return settings
+
+# Template context processor to make site settings available to all templates
+@app.context_processor
+def inject_site_settings():
+    return {'site_settings': get_site_settings()}
 
 # Public routes
 @app.route('/')
@@ -107,6 +126,21 @@ def delete_post(id):
     
     flash('Post deleted successfully!', 'success')
     return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/settings', methods=['GET', 'POST'])
+@login_required
+def admin_settings():
+    settings = get_site_settings()
+    
+    if request.method == 'POST':
+        settings.blog_title = request.form['blog_title']
+        settings.blog_description = request.form['blog_description']
+        db.session.commit()
+        
+        flash('Settings updated successfully!', 'success')
+        return redirect(url_for('admin_settings'))
+    
+    return render_template('admin_settings.html', settings=settings)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

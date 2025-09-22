@@ -11,13 +11,11 @@
 <body class="gradient-bg">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">Blog CMS</a>
+            <a class="navbar-brand" href="{{ url_for('index') }}">{{ site_settings.blog_title }}</a>
             <div class="navbar-nav ms-auto">
                 {% if session.logged_in %}
                     <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
                     <a class="nav-link" href="{{ url_for('admin_logout') }}">Logout</a>
-                {% else %}
-                    <a class="nav-link" href="{{ url_for('admin_login') }}">Admin Login</a>
                 {% endif %}
             </div>
         </div>

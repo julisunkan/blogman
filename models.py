@@ -12,3 +12,11 @@ class Post(db.Model):
     
     def __repr__(self):
         return f'<Post {self.id}: {self.title}>'
+
+class SiteSettings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    blog_title = db.Column(db.String(200), nullable=False, default='Blog CMS')
+    blog_description = db.Column(db.Text, nullable=False, default='Welcome to Our Blog')
+    
+    def __repr__(self):
+        return f'<SiteSettings: {self.blog_title}>'
