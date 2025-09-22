@@ -1,30 +1,77 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-from models import db, Post, SiteSettings
-from config import Config
 import os
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import DeclarativeBase
+from werkzeug.middleware.proxy_fix import ProxyFix
+from datetime import datetime, timedelta
 
+
+class Base(DeclarativeBase):
+    pass
+
+
+db = SQLAlchemy(model_class=Base)
+
+# create the app
 app = Flask(__name__)
-app.config.from_object(Config)
+app.secret_key = os.environ.get("SESSION_SECRET")
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)  # needed for url_for to generate with https
 
-# Initialize database
+# configure the database
+app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///blog.db'
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=24)
+
+# Admin credentials
+app.config["ADMIN_USERNAME"] = 'admin'
+app.config["ADMIN_PASSWORD"] = 'admin123'
+
+# initialize the app with the extension
 db.init_app(app)
 
-# Ensure instance directory exists and create tables
+# Database models
+class Post(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    featured_image = db.Column(db.String(500), nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Post {self.id}: {self.title}>'
+
+class SiteSettings(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    blog_title = db.Column(db.String(100), nullable=False, default='Blog CMS')
+    blog_description = db.Column(db.Text, nullable=False, default='Welcome to Our Blog')
+
+    # Color customization fields
+    primary_color = db.Column(db.String(7), nullable=False, default='#667eea')
+    secondary_color = db.Column(db.String(7), nullable=False, default='#764ba2')
+    background_color = db.Column(db.String(7), nullable=False, default='#667eea')
+    card_background = db.Column(db.String(7), nullable=False, default='#ffffff')
+    text_color = db.Column(db.String(7), nullable=False, default='#333333')
+    navbar_color = db.Column(db.String(7), nullable=False, default='#000000')
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+# Ensure instance directory exists for SQLite database
 os.makedirs('instance', exist_ok=True)
+
 with app.app_context():
     db.create_all()
     # Create default site settings if none exist
     if not SiteSettings.query.first():
-        default_settings = SiteSettings(
-            blog_title='Blog CMS', 
-            blog_description='Welcome to Our Blog',
-            primary_color='#667eea',
-            secondary_color='#764ba2',
-            background_color='#667eea',
-            card_background='#ffffff',
-            text_color='#333333',
-            navbar_color='#000000'
-        )
+        default_settings = SiteSettings()
+        default_settings.blog_title = 'Blog CMS'
+        default_settings.blog_description = 'Welcome to Our Blog'
+        default_settings.primary_color = '#667eea'
+        default_settings.secondary_color = '#764ba2'
+        default_settings.background_color = '#667eea'
+        default_settings.card_background = '#ffffff'
+        default_settings.text_color = '#333333'
+        default_settings.navbar_color = '#000000'
         db.session.add(default_settings)
         db.session.commit()
 
@@ -41,16 +88,15 @@ def login_required(f):
 def get_site_settings():
     settings = SiteSettings.query.first()
     if not settings:
-        settings = SiteSettings(
-            blog_title='Blog CMS', 
-            blog_description='Welcome to Our Blog',
-            primary_color='#667eea',
-            secondary_color='#764ba2',
-            background_color='#667eea',
-            card_background='#ffffff',
-            text_color='#333333',
-            navbar_color='#000000'
-        )
+        settings = SiteSettings()
+        settings.blog_title = 'Blog CMS'
+        settings.blog_description = 'Welcome to Our Blog'
+        settings.primary_color = '#667eea'
+        settings.secondary_color = '#764ba2'
+        settings.background_color = '#667eea'
+        settings.card_background = '#ffffff'
+        settings.text_color = '#333333'
+        settings.navbar_color = '#000000'
         db.session.add(settings)
         db.session.commit()
     return settings
@@ -110,7 +156,10 @@ def new_post():
         content = request.form['content']
         featured_image = request.form.get('featured_image', '').strip() or None
         
-        post = Post(title=title, content=content, featured_image=featured_image)
+        post = Post()
+        post.title = title
+        post.content = content
+        post.featured_image = featured_image
         db.session.add(post)
         db.session.commit()
         
