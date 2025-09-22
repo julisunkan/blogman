@@ -17,6 +17,51 @@
             </div>
         </div>
         
+        <!-- Certificate Generation Section -->
+        <div class="card blog-card mt-4 animate__animated animate__fadeInUp">
+            <div class="card-body">
+                <h4 class="card-title text-center mb-3">🏆 Get Your Completion Certificate</h4>
+                <p class="text-center text-muted mb-4">Enter your full name to generate a personalized certificate for completing this tutorial.</p>
+                
+                <form id="certificateForm" class="row g-3">
+                    <div class="col-md-8">
+                        <input type="text" class="form-control" id="fullName" placeholder="Enter your full name" required>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-success btn-gradient w-100">Generate Certificate</button>
+                    </div>
+                </form>
+                
+                <!-- Certificate Preview (Hidden initially) -->
+                <div id="certificatePreview" class="mt-4" style="display: none;">
+                    <div class="certificate-container">
+                        <div class="certificate">
+                            <div class="certificate-header">
+                                <h2>🎓 Certificate of Completion</h2>
+                            </div>
+                            <div class="certificate-body">
+                                <p class="mb-3">This is to certify that</p>
+                                <h3 id="certificateName" class="student-name"></h3>
+                                <p class="mb-3">has successfully completed the tutorial</p>
+                                <h4 id="certificateTitle" class="tutorial-title">"{{ post.title }}"</h4>
+                                <p class="completion-date">Date of Completion: <span id="completionDate"></span></p>
+                            </div>
+                            <div class="certificate-footer">
+                                <div class="signature-line">
+                                    <hr>
+                                    <small>Tutorial Platform</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <button id="downloadBtn" class="btn btn-primary btn-gradient">Download Certificate</button>
+                        <button id="printBtn" class="btn btn-outline-primary">Print Certificate</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="text-center mt-4">
             <a href="{{ url_for('index') }}" class="btn btn-secondary btn-gradient animate__animated animate__fadeInUp">
                 ← Back to Blog
@@ -24,4 +69,67 @@
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('certificateForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const fullName = document.getElementById('fullName').value.trim();
+    if (!fullName) {
+        alert('Please enter your full name');
+        return;
+    }
+    
+    // Update certificate with user's name
+    document.getElementById('certificateName').textContent = fullName;
+    document.getElementById('certificateTitle').textContent = '{{ post.title }}';
+    document.getElementById('completionDate').textContent = new Date().toLocaleDateString();
+    
+    // Show certificate preview
+    document.getElementById('certificatePreview').style.display = 'block';
+    
+    // Smooth scroll to certificate
+    document.getElementById('certificatePreview').scrollIntoView({ 
+        behavior: 'smooth' 
+    });
+});
+
+// Print functionality
+document.getElementById('printBtn').addEventListener('click', function() {
+    window.print();
+});
+
+// Download functionality (simplified - saves as HTML)
+document.getElementById('downloadBtn').addEventListener('click', function() {
+    const certificate = document.querySelector('.certificate').outerHTML;
+    const blob = new Blob([`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Certificate - {{ post.title }}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .certificate { max-width: 800px; margin: 0 auto; padding: 40px; border: 3px solid #667eea; border-radius: 15px; text-align: center; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
+                .certificate-header h2 { color: #667eea; margin-bottom: 30px; }
+                .student-name { color: #764ba2; margin: 20px 0; font-size: 2em; }
+                .tutorial-title { color: #667eea; margin: 20px 0; }
+                .completion-date { margin: 30px 0; font-style: italic; }
+                .signature-line { margin-top: 40px; }
+                .signature-line hr { width: 200px; margin: 0 auto; }
+            </style>
+        </head>
+        <body>${certificate}</body>
+        </html>
+    `], { type: 'text/html' });
+    
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'certificate-' + document.getElementById('certificateName').textContent.replace(/\s+/g, '-').toLowerCase() + '.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});
+</script>
 {% endblock %}
