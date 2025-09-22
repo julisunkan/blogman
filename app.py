@@ -172,6 +172,162 @@ def serve_manifest():
     from flask import send_from_directory
     return send_from_directory('static', 'manifest.json', mimetype='application/manifest+json')
 
+@app.route('/certificate/<int:post_id>/<path:student_name>')
+def download_certificate(post_id, student_name):
+    """Generate and download certificate server-side"""
+    from flask import Response
+    import urllib.parse
+    from datetime import datetime
+    
+    post = Post.query.get_or_404(post_id)
+    settings = get_site_settings()
+    
+    # Decode the student name from URL
+    student_name = urllib.parse.unquote(student_name)
+    completion_date = datetime.now().strftime('%B %d, %Y')
+    
+    certificate_html = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate - {student_name}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {{
+            font-family: 'Times New Roman', serif;
+            background: linear-gradient(135deg, {settings.background_color} 0%, {settings.secondary_color} 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }}
+        
+        .certificate {{
+            max-width: 800px;
+            margin: 50px auto;
+            background: white;
+            padding: 60px;
+            border: 8px solid {settings.primary_color};
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }}
+        
+        .certificate::before {{
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border: 3px solid {settings.secondary_color};
+            pointer-events: none;
+        }}
+        
+        .certificate-header {{
+            text-align: center;
+            margin-bottom: 40px;
+        }}
+        
+        .certificate-title {{
+            font-size: 3rem;
+            font-weight: bold;
+            color: {settings.primary_color};
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }}
+        
+        .certificate-subtitle {{
+            font-size: 1.2rem;
+            color: {settings.secondary_color};
+            margin-bottom: 30px;
+        }}
+        
+        .student-name {{
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: {settings.secondary_color};
+            text-decoration: underline;
+            text-decoration-color: {settings.primary_color};
+            margin: 20px 0;
+        }}
+        
+        .tutorial-title {{
+            font-size: 1.8rem;
+            font-style: italic;
+            color: {settings.primary_color};
+            margin: 20px 0;
+        }}
+        
+        .completion-text {{
+            font-size: 1.1rem;
+            line-height: 1.8;
+            text-align: center;
+            margin: 30px 0;
+        }}
+        
+        .date-signature {{
+            display: flex;
+            justify-content: space-between;
+            margin-top: 60px;
+        }}
+        
+        .signature-line {{
+            text-align: center;
+            min-width: 200px;
+        }}
+        
+        .signature-line hr {{
+            border: 2px solid {settings.primary_color};
+            margin: 10px 0;
+        }}
+        
+        .signature-line small {{
+            color: {settings.secondary_color};
+            font-size: 0.9rem;
+        }}
+    </style>
+</head>
+<body>
+    <div class="certificate">
+        <div class="certificate-header">
+            <h1 class="certificate-title">CERTIFICATE</h1>
+            <h2 class="certificate-subtitle">of Achievement</h2>
+        </div>
+        
+        <div class="certificate-content text-center">
+            <p class="completion-text">This is to certify that</p>
+            
+            <h2 class="student-name">{student_name}</h2>
+            
+            <p class="completion-text">has successfully completed the tutorial</p>
+            
+            <h3 class="tutorial-title">"{post.title}"</h3>
+            
+            <p class="completion-text">
+                and has demonstrated proficiency in the subject matter<br>
+                on this day of <strong>{completion_date}</strong>
+            </p>
+        </div>
+        
+        <div class="date-signature">
+            <div class="signature-line">
+                <hr>
+                <small>Date</small>
+            </div>
+            <div class="signature-line">
+                <hr>
+                <small>Tutorial Platform</small>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+    """
+    
+    response = Response(certificate_html, mimetype='text/html')
+    response.headers['Content-Disposition'] = f'attachment; filename="certificate-{student_name.replace(" ", "-").lower()}.html"'
+    return response
+
 @app.route('/dynamic-styles.css')
 def dynamic_styles():
     settings = get_site_settings()
