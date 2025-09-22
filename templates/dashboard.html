@@ -18,7 +18,6 @@
                         <tr>
                             <th>ID</th>
                             <th>Title</th>
-                            <th>Created</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -27,7 +26,6 @@
                         <tr>
                             <td>{{ post.id }}</td>
                             <td>{{ post.title }}</td>
-                            <td>{{ post.created_at.strftime('%m/%d/%Y') }}</td>
                             <td>
                                 <a href="{{ url_for('post_detail', id=post.id) }}" class="btn btn-sm btn-info">View</a>
                                 <a href="{{ url_for('edit_post', id=post.id) }}" class="btn btn-sm btn-warning">Edit</a>

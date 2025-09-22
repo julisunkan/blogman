@@ -71,8 +71,9 @@ def new_post():
     if request.method == 'POST':
         title = request.form['title']
         content = request.form['content']
+        featured_image = request.form.get('featured_image', '').strip() or None
         
-        post = Post(title=title, content=content)
+        post = Post(title=title, content=content, featured_image=featured_image)
         db.session.add(post)
         db.session.commit()
         
@@ -89,6 +90,7 @@ def edit_post(id):
     if request.method == 'POST':
         post.title = request.form['title']
         post.content = request.form['content']
+        post.featured_image = request.form.get('featured_image', '').strip() or None
         db.session.commit()
         
         flash('Post updated successfully!', 'success')
